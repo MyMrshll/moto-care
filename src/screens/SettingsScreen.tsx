@@ -75,7 +75,7 @@ export function SettingsScreen() {
                 Alert.alert("Siap!", "Tutup aplikasi atau biarkan terbuka, notifikasi akan muncul dalam 2 detik.");
                 notificationService.testNotification();
               }} 
-              variant="outline" 
+              variant="secondary" 
               fullWidth 
             />
           </View>
