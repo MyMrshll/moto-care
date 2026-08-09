@@ -6,7 +6,8 @@ import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 
@@ -32,21 +33,64 @@ const Tab = createBottomTabNavigator();
 
 function TabIcon({ IconComponent, label, focused }: { IconComponent: any; label: string; focused: boolean }) {
   return (
-    <View style={tabStyles.container}>
-      <IconComponent size={focused ? 24 : 22} color={focused ? colors.primary : colors.textTertiary} style={tabStyles.icon} />
+    <View style={[tabStyles.container, focused && tabStyles.containerFocused]}>
+      <View style={[tabStyles.iconWrapper, focused && tabStyles.iconWrapperFocused]}>
+        <IconComponent
+          size={focused ? 20 : 21}
+          color={focused ? colors.primary : colors.textTertiary}
+          strokeWidth={focused ? 2.4 : 1.8}
+        />
+      </View>
       <Text style={[tabStyles.label, focused && tabStyles.labelFocused]}>{label}</Text>
+      {focused && <View style={tabStyles.activeDot} />}
     </View>
   );
 }
 
 const tabStyles = StyleSheet.create({
-  container: { alignItems: 'center', justifyContent: 'center', paddingTop: 6 },
-  icon: { marginBottom: 2 },
-  label: { ...typography.labelSm, fontSize: 10, color: colors.textTertiary },
-  labelFocused: { color: colors.primary, fontWeight: '700' },
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 4,
+    minWidth: 64,
+  },
+  containerFocused: {
+    transform: [{ translateY: -2 }],
+  },
+  iconWrapper: {
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 3,
+  },
+  iconWrapperFocused: {
+    backgroundColor: colors.surfaceDim,
+  },
+  label: {
+    ...typography.labelSm,
+    fontSize: 11,
+    color: colors.textTertiary,
+    fontWeight: '500',
+  },
+  labelFocused: {
+    color: colors.primary,
+    fontWeight: '700',
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.primary,
+    marginTop: 3,
+  },
 });
 
 function MainTabs({ navigation }: any) {
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom, 12);
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -55,13 +99,19 @@ function MainTabs({ navigation }: any) {
           backgroundColor: colors.surface,
           borderTopColor: colors.borderLight,
           borderTopWidth: 1,
-          height: 70,
-          paddingBottom: 10,
-          elevation: 8,
-          shadowColor: '#0F172A',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 8,
+          position: 'absolute',
+          bottom: Platform.OS === 'ios' ? bottomInset : 12,
+          left: 16,
+          right: 16,
+          borderRadius: 28,
+          height: 66,
+          paddingBottom: 6,
+          paddingTop: 6,
+          elevation: 12,
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: 0.12,
+          shadowRadius: 16,
         },
         tabBarShowLabel: false,
       }}
@@ -148,3 +198,4 @@ export function AppNavigator() {
     </>
   );
 }
+
