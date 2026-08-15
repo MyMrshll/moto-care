@@ -55,11 +55,11 @@ export function SettingsScreen() {
 
         {/* Notifikasi */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>NOTIFIKASI</Text>
+          <Text style={styles.cardTitle}>NOTIFIKASI PENGINGAT</Text>
           <View style={styles.switchRow}>
             <View style={{ flex: 1 }}>
               <Text style={styles.switchLabel}>Pengingat Ganti Oli</Text>
-              <Text style={styles.switchDesc}>Kirim notifikasi saat oli mendekati batas</Text>
+              <Text style={styles.switchDesc}>Kirim notifikasi otomatis H-3 sebelum oli mencapai batas KM/waktu</Text>
             </View>
             <Switch
               value={notifEnabled}
@@ -70,10 +70,9 @@ export function SettingsScreen() {
           </View>
           <View style={{ marginTop: spacing.md }}>
             <ActionButton 
-              title="Coba Notifikasi (Muncul 2 Detik)" 
+              title="Tes Notifikasi Pengingat" 
               onPress={() => {
-                Alert.alert("Siap!", "Tutup aplikasi atau biarkan terbuka, notifikasi akan muncul dalam 2 detik.");
-                notificationService.testNotification();
+                notificationService.testNotification(vehicles[0]?.name);
               }} 
               variant="secondary" 
               fullWidth 

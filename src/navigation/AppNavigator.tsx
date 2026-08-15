@@ -2,8 +2,10 @@
  * AppNavigator — Stack + Bottom Tab Navigation
  */
 
-import React, { useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
+import { notificationService } from '../services/notificationService';
+import { useAppStore } from '../store/useAppStore';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, StyleSheet, Platform } from 'react-native';
@@ -33,16 +35,26 @@ const Tab = createBottomTabNavigator();
 
 function TabIcon({ IconComponent, label, focused }: { IconComponent: any; label: string; focused: boolean }) {
   return (
-    <View style={[tabStyles.container, focused && tabStyles.containerFocused]}>
+    <View style={tabStyles.container}>
       <View style={[tabStyles.iconWrapper, focused && tabStyles.iconWrapperFocused]}>
         <IconComponent
-          size={focused ? 20 : 21}
+          size={20}
           color={focused ? colors.primary : colors.textTertiary}
-          strokeWidth={focused ? 2.4 : 1.8}
+          strokeWidth={focused ? 2.3 : 1.8}
         />
       </View>
-      <Text style={[tabStyles.label, focused && tabStyles.labelFocused]}>{label}</Text>
-      {focused && <View style={tabStyles.activeDot} />}
+      <Text
+        style={[tabStyles.label, focused && tabStyles.labelFocused]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
+        {label}
+      </Text>
+      {focused ? (
+        <View style={tabStyles.activeDot} />
+      ) : (
+        <View style={tabStyles.activeDotPlaceholder} />
+      )}
     </View>
   );
 }
@@ -51,28 +63,27 @@ const tabStyles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 4,
-    minWidth: 64,
-  },
-  containerFocused: {
-    transform: [{ translateY: -2 }],
+    paddingHorizontal: 2,
+    width: 80,
   },
   iconWrapper: {
     paddingHorizontal: 16,
-    paddingVertical: 5,
-    borderRadius: 18,
+    paddingVertical: 4,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   iconWrapperFocused: {
-    backgroundColor: colors.surfaceDim,
+    backgroundColor: '#E6F4EA',
   },
   label: {
-    ...typography.labelSm,
-    fontSize: 11,
+    fontSize: 10,
     color: colors.textTertiary,
-    fontWeight: '500',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textTransform: 'uppercase',
+    textAlign: 'center',
   },
   labelFocused: {
     color: colors.primary,
@@ -85,11 +96,16 @@ const tabStyles = StyleSheet.create({
     backgroundColor: colors.primary,
     marginTop: 3,
   },
+  activeDotPlaceholder: {
+    width: 4,
+    height: 4,
+    marginTop: 3,
+  },
 });
 
 function MainTabs({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const bottomInset = Math.max(insets.bottom, 12);
+  const bottomInset = Math.max(insets.bottom + 8, 14);
 
   return (
     <Tab.Navigator
@@ -100,18 +116,18 @@ function MainTabs({ navigation }: any) {
           borderTopColor: colors.borderLight,
           borderTopWidth: 1,
           position: 'absolute',
-          bottom: Platform.OS === 'ios' ? bottomInset : 12,
+          bottom: bottomInset,
           left: 16,
           right: 16,
-          borderRadius: 28,
-          height: 66,
-          paddingBottom: 6,
+          borderRadius: 24,
+          height: 68,
+          paddingBottom: 4,
           paddingTop: 6,
-          elevation: 12,
-          shadowColor: colors.primary,
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.12,
-          shadowRadius: 16,
+          elevation: 10,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.1,
+          shadowRadius: 12,
         },
         tabBarShowLabel: false,
       }}
@@ -155,6 +171,29 @@ function MainTabs({ navigation }: any) {
 export function AppNavigator() {
   const [showSplash, setShowSplash] = useState(true);
   const [initialRoute, setInitialRoute] = useState<'AddVehicle' | 'MainTabs'>('AddVehicle');
+  const navigationRef = useNavigationContainerRef();
+
+  useEffect(() => {
+    if (showSplash) return;
+
+    const unsubscribe = notificationService.setupResponseListener((data) => {
+      if (data?.vehicleId) {
+        useAppStore.getState().setActiveVehicle(data.vehicleId);
+      }
+
+      if (navigationRef.isReady()) {
+        if (data?.screen === 'OilChange') {
+          navigationRef.navigate('OilChange' as never);
+        } else {
+          navigationRef.navigate('MainTabs' as never);
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [showSplash, navigationRef]);
 
   if (showSplash) {
     return (
@@ -169,7 +208,7 @@ export function AppNavigator() {
 
   return (
     <>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
           initialRouteName={initialRoute}
           screenOptions={{ headerShown: false, animation: 'slide_from_right' }}

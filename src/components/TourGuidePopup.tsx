@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,10 @@ import {
   Animated,
 } from 'react-native';
 import { useAppStore } from '../store/useAppStore';
-import { MapPin, Bell, Settings, ArrowRight, CheckCircle2 } from 'lucide-react-native';
+import { ShieldCheck, Gauge, Bell, ArrowRight, CheckCircle2 } from 'lucide-react-native';
+import { colors } from '../theme/colors';
+import { typography } from '../theme/typography';
+import { layout, spacing } from '../theme/spacing';
 
 const { width } = Dimensions.get('window');
 
@@ -17,23 +20,23 @@ const TOUR_STEPS = [
   {
     id: 1,
     title: 'Selamat Datang di MotoCare',
-    description: 'Aplikasi pintar untuk memantau jadwal ganti oli kendaraan Anda tanpa ribet.',
-    Icon: MapPin,
-    color: '#0066CC',
+    description: 'Aplikasi pintar pelacak perawatan motor. Pantau kondisi & jadwal ganti oli kendaraan Anda dengan mudah.',
+    Icon: ShieldCheck,
+    color: colors.primary,
   },
   {
     id: 2,
-    title: 'Tracking Akurat',
-    description: 'Catat kilometer setiap kali ganti oli, dan kami akan menghitung sisanya untuk Anda.',
-    Icon: Settings,
-    color: '#F59E0B',
+    title: 'Pelacakan Kilometer Akurat',
+    description: 'Catat kilometer setiap kali servis atau ganti oli. MotoCare akan menghitung sisa batas KM secara otomatis.',
+    Icon: Gauge,
+    color: '#3B82F6',
   },
   {
     id: 3,
-    title: 'Notifikasi Tepat Waktu',
-    description: 'Dapatkan pengingat otomatis saat kendaraan Anda sudah waktunya ganti oli.',
+    title: 'Pengingat Otomatis',
+    description: 'Dapatkan pengingat tepat waktu saat oli motor Anda mendekati batas kilometer atau masa pakai.',
     Icon: Bell,
-    color: '#10B981',
+    color: colors.safe,
   },
 ];
 
@@ -41,15 +44,20 @@ export const TourGuidePopup = () => {
   const { hasSeenOnboarding, completeOnboarding } = useAppStore();
   const [currentStep, setCurrentStep] = useState(0);
 
+  // Reset langkah tutorial ke awal setiap kali status onboarding di-reset
+  useEffect(() => {
+    if (!hasSeenOnboarding) {
+      setCurrentStep(0);
+    }
+  }, [hasSeenOnboarding]);
+
   // Animation values
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   const slideAnim = React.useRef(new Animated.Value(0)).current;
 
-  // Jika sudah pernah melihat onboarding, jangan tampilkan
   if (hasSeenOnboarding) return null;
 
   const animateToNextStep = (nextStep: number) => {
-    // Animate out current content
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 0,
@@ -57,18 +65,13 @@ export const TourGuidePopup = () => {
         useNativeDriver: false,
       }),
       Animated.timing(slideAnim, {
-        toValue: -20, // Slide left
+        toValue: -20,
         duration: 150,
         useNativeDriver: false,
       }),
     ]).start(() => {
-      // Update step
       setCurrentStep(nextStep);
-      
-      // Prepare for animating in
-      slideAnim.setValue(20); // Start from right
-      
-      // Animate in new content
+      slideAnim.setValue(20);
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -76,7 +79,7 @@ export const TourGuidePopup = () => {
           useNativeDriver: false,
         }),
         Animated.timing(slideAnim, {
-          toValue: 0, // Slide to center
+          toValue: 0,
           duration: 200,
           useNativeDriver: false,
         }),
@@ -116,47 +119,48 @@ export const TourGuidePopup = () => {
                 style={[
                   styles.progressDot,
                   index === currentStep && styles.progressDotActive,
+                  index === currentStep && { backgroundColor: step.color },
                 ]}
               />
             ))}
           </View>
 
           {/* Animated Content */}
-          <Animated.View 
+          <Animated.View
             style={[
               styles.contentContainer,
               {
                 opacity: fadeAnim,
-                transform: [{ translateX: slideAnim }]
-              }
+                transform: [{ translateX: slideAnim }],
+              },
             ]}
           >
             <View style={[styles.iconContainer, { backgroundColor: `${step.color}15` }]}>
-              <Icon size={48} color={step.color} strokeWidth={1.5} />
+              <Icon size={44} color={step.color} strokeWidth={2} />
             </View>
 
             <Text style={styles.title}>{step.title}</Text>
             <Text style={styles.description}>{step.description}</Text>
           </Animated.View>
 
-          {/* Footer / Controls */}
+          {/* Footer Controls */}
           <View style={styles.footer}>
-            <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+            <TouchableOpacity onPress={handleSkip} style={styles.skipButton} activeOpacity={0.7}>
               <Text style={styles.skipText}>Lewati</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleNext}
               style={[styles.nextButton, { backgroundColor: step.color }]}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
               <Text style={styles.nextText}>
-                {currentStep === TOUR_STEPS.length - 1 ? 'Mulai' : 'Lanjut'}
+                {currentStep === TOUR_STEPS.length - 1 ? 'Mulai Sekarang' : 'Lanjut'}
               </Text>
               {currentStep === TOUR_STEPS.length - 1 ? (
-                <CheckCircle2 size={20} color="#fff" style={{ marginLeft: 8 }} />
+                <CheckCircle2 size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
               ) : (
-                <ArrowRight size={20} color="#fff" style={{ marginLeft: 8 }} />
+                <ArrowRight size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
               )}
             </TouchableOpacity>
           </View>
@@ -169,65 +173,64 @@ export const TourGuidePopup = () => {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
+    padding: spacing.xl,
   },
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
+    backgroundColor: colors.surface,
+    borderRadius: layout.radiusXl,
+    padding: spacing['2xl'],
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 380,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 12,
   },
   progressContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: spacing['2xl'],
     gap: 8,
   },
   progressDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.borderLight,
   },
   progressDotActive: {
     width: 24,
-    backgroundColor: '#0066CC',
   },
   contentContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: spacing['3xl'],
   },
   iconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 12,
+    ...typography.headlineMd,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
     textAlign: 'center',
   },
   description: {
-    fontSize: 16,
-    color: '#6B7280',
+    ...typography.bodyMd,
+    color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
+    paddingHorizontal: spacing.sm,
   },
   footer: {
     flexDirection: 'row',
@@ -236,24 +239,26 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   skipButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
   },
   skipText: {
-    fontSize: 16,
-    color: '#6B7280',
+    ...typography.bodyMd,
+    color: colors.textTertiary,
     fontWeight: '600',
   },
   nextButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: layout.radiusMd,
   },
   nextText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
+    ...typography.bodyLg,
+    color: colors.surface,
+    fontWeight: '700',
+    fontSize: 15,
   },
 });
+
