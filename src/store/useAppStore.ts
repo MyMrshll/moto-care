@@ -58,8 +58,7 @@ export const useAppStore = create<AppStore>()(
         const id = generateId();
         const vehicle: Vehicle = {
           id,
-          name: vehicleData.name,
-          currentKM: vehicleData.currentKM,
+          ...vehicleData,
           createdAt: new Date().toISOString(),
         };
         set((state) => ({

@@ -45,19 +45,22 @@ export function calculateOilStatus(
     };
   }
 
+  const effectiveKmLimit = vehicle.kmLimitOverride || settings.kmLimit;
+  const effectiveDayLimit = vehicle.dayLimitOverride || settings.dayLimit;
+
   const kmDiff = vehicle.currentKM - lastRecord.changeKM;
   const daysDiff = differenceInDays(new Date(), new Date(lastRecord.changeDate));
 
-  const kmRemaining = Math.max(0, settings.kmLimit - kmDiff);
-  const daysRemaining = Math.max(0, settings.dayLimit - daysDiff);
+  const kmRemaining = Math.max(0, effectiveKmLimit - kmDiff);
+  const daysRemaining = Math.max(0, effectiveDayLimit - daysDiff);
 
   // Persentase pemakaian (ambil yang lebih tinggi antara KM dan waktu)
-  const kmPercent = Math.min(100, (kmDiff / settings.kmLimit) * 100);
-  const dayPercent = Math.min(100, (daysDiff / settings.dayLimit) * 100);
+  const kmPercent = Math.min(100, (kmDiff / effectiveKmLimit) * 100);
+  const dayPercent = Math.min(100, (daysDiff / effectiveDayLimit) * 100);
   const percentUsed = Math.max(kmPercent, dayPercent);
 
   // Tentukan status
-  const status = determineStatus(kmDiff, daysDiff, settings);
+  const status = determineStatus(kmDiff, daysDiff, effectiveKmLimit, effectiveDayLimit);
 
   return {
     status,
@@ -79,16 +82,17 @@ export function calculateOilStatus(
 function determineStatus(
   kmDiff: number,
   daysDiff: number,
-  settings: Settings,
+  kmLimit: number,
+  dayLimit: number,
 ): OilStatus {
   // URGENT: Melebihi batas
-  if (kmDiff >= settings.kmLimit || daysDiff >= settings.dayLimit) {
+  if (kmDiff >= kmLimit || daysDiff >= dayLimit) {
     return 'URGENT';
   }
 
   // WARNING: Mendekati batas (80% KM atau 75% waktu)
-  const kmThreshold = settings.kmLimit * 0.8;
-  const dayThreshold = settings.dayLimit * 0.75;
+  const kmThreshold = kmLimit * 0.8;
+  const dayThreshold = dayLimit * 0.75;
 
   if (kmDiff >= kmThreshold || daysDiff >= dayThreshold) {
     return 'WARNING';

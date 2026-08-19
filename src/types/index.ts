@@ -6,7 +6,12 @@
 export interface Vehicle {
   id: string;
   name: string;
+  plateNumber?: string;
+  brand?: string;
+  model?: string;
   currentKM: number;
+  kmLimitOverride?: number;
+  dayLimitOverride?: number;
   createdAt: string; // ISO date string
 }
 

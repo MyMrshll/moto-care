@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# local build scripts & logs
+*.log
+build_apk.sh
+run_build*.py
+run_gradle.sh

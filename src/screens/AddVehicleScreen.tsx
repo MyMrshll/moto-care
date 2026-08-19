@@ -32,6 +32,8 @@ export function AddVehicleScreen({ onComplete, onBack, isModal = false }: AddVeh
   const addOilRecord = useAppStore((s) => s.addOilRecord);
 
   const [name, setName] = useState('');
+  const [plateNumber, setPlateNumber] = useState('');
+  const [brand, setBrand] = useState('');
   const [currentKM, setCurrentKM] = useState('');
   const [lastChangeKM, setLastChangeKM] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -67,6 +69,8 @@ export function AddVehicleScreen({ onComplete, onBack, isModal = false }: AddVeh
     try {
       const vehicleId = addVehicle({
         name: name.trim(),
+        plateNumber: plateNumber.trim() ? plateNumber.trim().toUpperCase() : undefined,
+        brand: brand.trim() ? brand.trim() : undefined,
         currentKM: Number(currentKM),
       });
 
@@ -121,6 +125,21 @@ export function AddVehicleScreen({ onComplete, onBack, isModal = false }: AddVeh
             onChangeText={setName}
             error={errors.name}
             autoCapitalize="words"
+          />
+
+          <InputField
+            label="PLAT NOMOR (OPSIONAL)"
+            placeholder="contoh: B 1234 XYZ"
+            value={plateNumber}
+            onChangeText={setPlateNumber}
+            autoCapitalize="characters"
+          />
+
+          <InputField
+            label="MEREK / MANUFAKTUR (OPSIONAL)"
+            placeholder="contoh: Honda, Yamaha, Vespa"
+            value={brand}
+            onChangeText={setBrand}
           />
 
           <InputField

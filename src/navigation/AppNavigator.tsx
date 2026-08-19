@@ -1,5 +1,6 @@
 /**
- * AppNavigator — Stack + Bottom Tab Navigation
+ * AppNavigator — Stack + Bottom Tab Navigation 🧭
+ * Fitur 1.1.0: 4 Main Tabs (Beranda, Garasi Motor, Detail & Riwayat, Pengaturan)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -8,25 +9,26 @@ import { notificationService } from '../services/notificationService';
 import { useAppStore } from '../store/useAppStore';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, View, StyleSheet, Platform } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../theme/colors';
-import { typography } from '../theme/typography';
 
 import { SplashScreen } from '../screens/SplashScreen';
 import { AddVehicleScreen } from '../screens/AddVehicleScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
+import { VehicleListScreen } from '../screens/VehicleListScreen';
 import { VehicleDetailScreen } from '../screens/VehicleDetailScreen';
 import { OilChangeScreen } from '../screens/OilChangeScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { TourGuidePopup } from '../components/TourGuidePopup';
 
-import { Home, ClipboardList, Settings } from 'lucide-react-native';
+import { Home, Bike, ClipboardList, Settings } from 'lucide-react-native';
 
 type RootStackParamList = {
   Splash: undefined;
   AddVehicle: { isModal?: boolean } | undefined;
-  MainTabs: undefined;
+  MainTabs: { screen?: string } | undefined;
+  VehicleDetailStack: { vehicleId: string };
   OilChange: undefined;
 };
 
@@ -38,7 +40,7 @@ function TabIcon({ IconComponent, label, focused }: { IconComponent: any; label:
     <View style={tabStyles.container}>
       <View style={[tabStyles.iconWrapper, focused && tabStyles.iconWrapperFocused]}>
         <IconComponent
-          size={20}
+          size={19}
           color={focused ? colors.primary : colors.textTertiary}
           strokeWidth={focused ? 2.3 : 1.8}
         />
@@ -63,13 +65,12 @@ const tabStyles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 2,
-    width: 80,
+    flex: 1,
   },
   iconWrapper: {
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
@@ -78,11 +79,10 @@ const tabStyles = StyleSheet.create({
     backgroundColor: '#E6F4EA',
   },
   label: {
-    fontSize: 10,
+    fontSize: 9.5,
     color: colors.textTertiary,
     fontWeight: '600',
-    letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    letterSpacing: 0.2,
     textAlign: 'center',
   },
   labelFocused: {
@@ -94,18 +94,18 @@ const tabStyles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: colors.primary,
-    marginTop: 3,
+    marginTop: 2,
   },
   activeDotPlaceholder: {
     width: 4,
     height: 4,
-    marginTop: 3,
+    marginTop: 2,
   },
 });
 
 function MainTabs({ navigation }: any) {
   const insets = useSafeAreaInsets();
-  const bottomInset = Math.max(insets.bottom + 8, 14);
+  const bottomInset = Math.max(insets.bottom + 6, 12);
 
   return (
     <Tab.Navigator
@@ -117,10 +117,10 @@ function MainTabs({ navigation }: any) {
           borderTopWidth: 1,
           position: 'absolute',
           bottom: bottomInset,
-          left: 16,
-          right: 16,
+          left: 14,
+          right: 14,
           borderRadius: 24,
-          height: 68,
+          height: 66,
           paddingBottom: 4,
           paddingTop: 6,
           elevation: 10,
@@ -145,6 +145,23 @@ function MainTabs({ navigation }: any) {
           />
         )}
       </Tab.Screen>
+
+      <Tab.Screen
+        name="VehicleList"
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon IconComponent={Bike} label="Garasi" focused={focused} />,
+        }}
+      >
+        {() => (
+          <VehicleListScreen
+            onAddVehicle={() => navigation.navigate('AddVehicle', { isModal: true })}
+            onViewDetail={(vehicleId: string) =>
+              navigation.navigate('VehicleDetailStack', { vehicleId })
+            }
+          />
+        )}
+      </Tab.Screen>
+
       <Tab.Screen
         name="Detail"
         options={{
@@ -154,9 +171,11 @@ function MainTabs({ navigation }: any) {
         {() => (
           <VehicleDetailScreen
             onOilChange={() => navigation.navigate('OilChange')}
+            onAddVehicle={() => navigation.navigate('AddVehicle', { isModal: true })}
           />
         )}
       </Tab.Screen>
+
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}
@@ -222,8 +241,24 @@ export function AppNavigator() {
               />
             )}
           </Stack.Screen>
+
           <Stack.Screen name="MainTabs" component={MainTabs} />
-          <Stack.Screen name="OilChange" options={{ presentation: 'modal', animation: 'slide_from_bottom' }}>
+
+          <Stack.Screen name="VehicleDetailStack">
+            {({ navigation, route }) => (
+              <VehicleDetailScreen
+                vehicleId={route.params?.vehicleId}
+                onOilChange={() => navigation.navigate('OilChange')}
+                onBack={() => navigation.goBack()}
+                onAddVehicle={() => navigation.navigate('AddVehicle', { isModal: true })}
+              />
+            )}
+          </Stack.Screen>
+
+          <Stack.Screen
+            name="OilChange"
+            options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
+          >
             {({ navigation }) => (
               <OilChangeScreen
                 onComplete={() => navigation.goBack()}
@@ -237,4 +272,3 @@ export function AppNavigator() {
     </>
   );
 }
-

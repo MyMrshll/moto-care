@@ -13,7 +13,7 @@ import { typography } from '../theme/typography';
 import { layout, spacing } from '../theme/spacing';
 import { StatusCard } from '../components/StatusCard';
 import { ActionButton } from '../components/ActionButton';
-import { VehicleSelector } from '../components/VehicleSelector';
+import { VehicleDropdown } from '../components/VehicleDropdown';
 import { LogItem } from '../components/LogItem';
 import { InputField } from '../components/InputField';
 import { useAppStore, selectActiveVehicle, selectVehicleRecords } from '../store/useAppStore';
@@ -32,6 +32,7 @@ export function DashboardScreen({ onAddVehicle, onOilChange }: DashboardScreenPr
   const setActiveVehicle = useAppStore((s) => s.setActiveVehicle);
   const settings = useAppStore((s) => s.settings);
   const updateKM = useAppStore((s) => s.updateKM);
+  const allRecords = useAppStore((s) => s.oilRecords);
   const records = useAppStore(
     useShallow(activeVehicle ? selectVehicleRecords(activeVehicle.id) : () => [])
   );
@@ -96,13 +97,23 @@ export function DashboardScreen({ onAddVehicle, onOilChange }: DashboardScreenPr
             />
             <View>
               <Text style={styles.greeting}>MotoCare</Text>
-              <Text style={styles.headerSub}>KM saat ini: {formatKM(activeVehicle.currentKM)} km</Text>
+              <Text style={styles.headerSub}>
+                Dipantau: {activeVehicle.name} {activeVehicle.plateNumber ? `• ${activeVehicle.plateNumber}` : ''}
+              </Text>
             </View>
           </View>
           <View style={styles.headerBadge}><Droplet size={22} color={colors.textPrimary} /></View>
         </View>
 
-        <VehicleSelector vehicles={vehicles} activeId={activeVehicle.id} onSelect={setActiveVehicle} onAdd={onAddVehicle} />
+        {/* Dropdown Motor */}
+        <VehicleDropdown
+          vehicles={vehicles}
+          activeVehicle={activeVehicle}
+          oilRecords={allRecords}
+          settings={settings}
+          onSelect={setActiveVehicle}
+          onAdd={onAddVehicle}
+        />
 
         <View style={styles.section}><StatusCard vehicleName={activeVehicle.name} statusData={statusData} /></View>
 
